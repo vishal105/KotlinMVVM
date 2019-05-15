@@ -29,6 +29,12 @@ class MainFragment : BaseFragment<MainFragmentViewModel,
     override val isBackEnable: Boolean?
         get() = true
 
+    /*
+        override fun createViewModel(activity: FragmentActivity): BottomNavigationViewModel {
+        return ViewModelProviders.of(activity).get(BottomNavigationViewModel::class.java)
+    }
+     */
+
     override fun initData() {
         tvTitle?.setOnClickListener {
             val currentActivity = baseActivity as BottomNavigationActivity

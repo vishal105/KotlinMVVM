@@ -5,4 +5,5 @@ import com.support.kotlinmvvm.base.viewmodel.BaseViewModel
 
 class BottomNavigationViewModel constructor(app: Application) : BaseViewModel(app){
 
+    val data = "Abc"
 }

@@ -1,6 +1,7 @@
 package com.support.kotlinmvvm.base.fragment
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.LayoutInflater
@@ -14,14 +15,15 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.ViewModelProviders
 import com.support.kotlinmvvm.base.activity.BaseActivity
 import com.support.kotlinmvvm.base.viewmodel.BaseViewModel
-import com.support.kotlinmvvm.extensions.observe
-import com.support.kotlinmvvm.extensions.snack
+import com.support.kotlinmvvm.extensions.*
 import com.support.kotlinmvvm.utils.statelayout.StateLayout
-
 
 abstract class BaseFragment<VM : BaseViewModel,
         DB : ViewDataBinding>(private val mViewModelClass: Class<VM>) :
     Fragment() {
+
+    private val PERMISSION_CODE = 101
+    private var permissionCallBack: PermissionCallBack? = null
 
     open val isBackEnable: Boolean?
         get() = false
@@ -151,6 +153,32 @@ abstract class BaseFragment<VM : BaseViewModel,
 
     open fun createViewModel(fragment: Fragment): VM {
         return ViewModelProviders.of(fragment).get(mViewModelClass)
+    }
+
+    fun requestPermissionsIfRequired(permissions: ArrayList<String>, permissionCallBack: PermissionCallBack?) {
+        this.permissionCallBack = permissionCallBack
+        if (checkSelfPermissions(permissions)) {
+            permissionCallBack?.permissionGranted()
+        } else {
+            requestAllPermissions(permissions, PERMISSION_CODE)
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            PERMISSION_CODE -> {
+                if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    permissionCallBack?.permissionGranted()
+                } else {
+                    if (checkPermissionRationale(permissions)) {
+                        permissionCallBack?.permissionDenied()
+                    } else {
+                        permissionCallBack?.onPermissionDisabled()
+                    }
+                }
+            }
+        }
     }
 
     override fun onResume() {
