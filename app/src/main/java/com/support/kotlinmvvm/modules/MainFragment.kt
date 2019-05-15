@@ -16,12 +16,18 @@ class MainFragment : BaseFragment<MainFragmentViewModel,
 
     override val bindingVariable: Int
         get() = BR.viewModel
+
     override val layoutId: Int
         get() = R.layout.fragment_main
 
-    override fun getStateLayout(): StateLayout? {
-        return null
-    }
+    override val stateLayout: StateLayout?
+        get() = null
+
+    override val toolbartitle: String?
+        get() = "Demo"
+
+    override val isBackEnable: Boolean?
+        get() = true
 
     override fun initData() {
         tvTitle?.setOnClickListener {

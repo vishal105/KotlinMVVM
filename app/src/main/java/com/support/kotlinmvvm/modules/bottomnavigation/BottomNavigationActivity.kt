@@ -16,6 +16,7 @@ import com.support.kotlinmvvm.utils.fragmentNavController.FragNavTransactionOpti
 import com.support.kotlinmvvm.utils.fragmentNavController.tabHistory.UniqueTabHistoryStrategy
 import com.support.kotlinmvvm.utils.statelayout.StateLayout
 import kotlinx.android.synthetic.main.activity_bottom_navigation.*
+import kotlinx.android.synthetic.main.layout_toolbar.*
 
 class BottomNavigationActivity : BaseActivity<BottomNavigationViewModel,
         ActivityBottomNavigationBinding>(BottomNavigationViewModel::class.java), FragNavController.TransactionListener,
@@ -30,21 +31,15 @@ class BottomNavigationActivity : BaseActivity<BottomNavigationViewModel,
 
     val fragNavController: FragNavController = FragNavController(supportFragmentManager, R.id.container)
 
-    override fun getToolBar(): Toolbar? {
-        return null
-    }
-
-    override fun getToolBarTitle(): String? {
-        return ""
-    }
+    override val toolbar: Toolbar?
+        get() = tool_bar
 
     override fun getLayoutRes(): Int {
         return R.layout.activity_bottom_navigation
     }
 
-    override fun getStateLayout(): StateLayout? {
-        return stateBottomNavigation
-    }
+    override val stateLayout: StateLayout?
+        get() = stateBottomNavigation
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -119,14 +114,14 @@ class BottomNavigationActivity : BaseActivity<BottomNavigationViewModel,
 
     override fun onTabTransaction(fragment: Fragment?, index: Int) {
         // If we have a backstack, show the back button
-        supportActionBar?.setDisplayHomeAsUpEnabled(fragNavController.isRootFragment.not())
+        //supportActionBar?.setDisplayHomeAsUpEnabled(fragNavController.isRootFragment.not())
     }
 
 
     override fun onFragmentTransaction(fragment: Fragment?, transactionType: FragNavController.TransactionType) {
         //do fragmentty stuff. Maybe change title, I'm not going to tell you how to live your life
         // If we have a backstack, show the back button
-        supportActionBar?.setDisplayHomeAsUpEnabled(fragNavController.isRootFragment.not())
+        //supportActionBar?.setDisplayHomeAsUpEnabled(fragNavController.isRootFragment.not())
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

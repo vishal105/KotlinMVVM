@@ -10,37 +10,47 @@
                 type="com.support.kotlinmvvm.modules.bottomnavigation.BottomNavigationViewModel"/>
     </data>
 
-    <com.support.kotlinmvvm.utils.statelayout.StateLayout
-            android:id="@+id/stateBottomNavigation"
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            tools:context=".modules.bottomnavigation.BottomNavigationActivity">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <include
+                layout="@layout/layout_toolbar"/>
+
+        <com.support.kotlinmvvm.utils.statelayout.StateLayout
+                android:id="@+id/stateBottomNavigation"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tools:context=".modules.bottomnavigation.BottomNavigationActivity">
+                app:layout_behavior="@string/appbar_scrolling_view_behavior"
+                android:layout_height="match_parent">
 
-            <FrameLayout
-                    android:id="@+id/container"
+            <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
-                    android:layout_height="0dp"
-                    app:layout_constraintBottom_toTopOf="@+id/mBottomNav"
-                    app:layout_constraintTop_toTopOf="parent"/>
+                    android:layout_height="match_parent">
 
-            <com.google.android.material.bottomnavigation.BottomNavigationView
-                    android:id="@+id/mBottomNav"
-                    android:layout_width="match_parent"
-                    android:layout_height="56dp"
-                    app:itemBackground="@android:color/white"
-                    app:labelVisibilityMode="labeled"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:menu="@menu/menu_bottom" />
+                <FrameLayout
+                        android:id="@+id/container"
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        app:layout_constraintBottom_toTopOf="@+id/mBottomNav"
+                        app:layout_constraintTop_toTopOf="parent"/>
+
+                <com.google.android.material.bottomnavigation.BottomNavigationView
+                        android:id="@+id/mBottomNav"
+                        android:layout_width="match_parent"
+                        android:layout_height="56dp"
+                        app:itemBackground="@android:color/white"
+                        app:labelVisibilityMode="labeled"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:menu="@menu/menu_bottom"/>
 
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
-    </com.support.kotlinmvvm.utils.statelayout.StateLayout>
+        </com.support.kotlinmvvm.utils.statelayout.StateLayout>
+
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 
 </layout>

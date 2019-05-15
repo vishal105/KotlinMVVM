@@ -27,18 +27,25 @@ abstract class BaseActivity<VM : BaseViewModel,
     @LayoutRes
     abstract fun getLayoutRes(): Int
 
-    abstract fun getStateLayout(): StateLayout?
+    open val stateLayout: StateLayout?
+        get() = null
 
-    abstract fun getToolBar(): Toolbar?
+    open val isBackEnable: Boolean?
+        get() = false
 
-    abstract fun getToolBarTitle(): String?
+    open val toolbartitle: String?
+        get() = ""
 
-    open fun isBackEnable() = false
+    open val toolbar: Toolbar?
+        get() = null
+
+    abstract fun initData()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         viewModel = createViewModel(this)
         super.onCreate(savedInstanceState)
         binding
+        initToolbar(toolbar)
         viewModel?.apply {
             lifecycle.addObserver(this)
         }
@@ -46,7 +53,28 @@ abstract class BaseActivity<VM : BaseViewModel,
         initData()
     }
 
-    abstract fun initData()
+    fun initToolbar(toolbar: Toolbar?) {
+        if (toolbar != null) {
+            setSupportActionBar(toolbar)
+            initToolbarBack(isBackEnable)
+            initToolbarTitle(toolbartitle)
+        }
+    }
+
+    fun initToolbarBack(isEnable: Boolean?) {
+        isEnable?.let {
+            this.supportActionBar?.setHomeButtonEnabled(it)
+            this.supportActionBar?.setDisplayHomeAsUpEnabled(isEnable)
+        }
+
+    }
+
+    fun initToolbarTitle(title: String?) {
+        if (this.supportActionBar != null && title?.isNotEmpty() == true) {
+            this.supportActionBar?.title = title
+            this.toolbar?.title = title
+        }
+    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -57,22 +85,22 @@ abstract class BaseActivity<VM : BaseViewModel,
     private fun onCreateReference() {
         viewModel?.isLoading?.observe(this) {
             if (it == false) {
-                getStateLayout()?.loading()
+               stateLayout?.loading()
             } else {
-                getStateLayout()?.loadingWithContent()
+               stateLayout?.loadingWithContent()
             }
         }
 
         viewModel?.networkError?.observe(this) {
-            it?.let { it1 -> getStateLayout()?.infoButtonListener(it1) }
+            it?.let { it1 ->stateLayout?.infoButtonListener(it1) }
         }
 
         viewModel?.infoStateview?.observe(this) {
-            getStateLayout()?.showInfo(it)
+           stateLayout?.showInfo(it)
         }
 
         viewModel?.infoEmptyView?.observe(this) {
-            getStateLayout()?.showEmpty(it)
+           stateLayout?.showEmpty(it)
         }
 
         viewModel?.errorMessage?.observe(this) {
@@ -109,15 +137,6 @@ abstract class BaseActivity<VM : BaseViewModel,
             binding.root.apply {
                 snack(it) {}
             }
-        }
-    }
-
-    fun setToolBar(title: String?, isBackEnable: Boolean) {
-        if (getToolBar() != null) {
-            setSupportActionBar(getToolBar())
-            supportActionBar?.title = title
-            supportActionBar?.setHomeButtonEnabled(isBackEnable)
-            supportActionBar?.setDisplayHomeAsUpEnabled(isBackEnable)
         }
     }
 

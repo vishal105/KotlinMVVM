@@ -23,10 +23,18 @@ abstract class BaseFragment<VM : BaseViewModel,
         DB : ViewDataBinding>(private val mViewModelClass: Class<VM>) :
     Fragment() {
 
+    open val isBackEnable: Boolean?
+        get() = false
+
+    open val toolbartitle: String?
+        get() = ""
+
     var binding: DB? = null
         private set
+
     var baseActivity: BaseActivity<*, *>? = null
         private set
+
     private var mRootView: View? = null
 
     var viewModel: VM? = null
@@ -36,7 +44,8 @@ abstract class BaseFragment<VM : BaseViewModel,
     @get:LayoutRes
     abstract val layoutId: Int
 
-    abstract fun getStateLayout(): StateLayout?
+    open val stateLayout: StateLayout?
+        get() = null
 
     abstract fun initData()
 
@@ -54,6 +63,12 @@ abstract class BaseFragment<VM : BaseViewModel,
         retainInstance = true
         viewModel?.apply {
             lifecycle.addObserver(this)
+        }
+        if (baseActivity != null) {
+            if (baseActivity?.supportActionBar != null) {
+                baseActivity?.initToolbarBack(isBackEnable)
+                baseActivity?.initToolbarTitle(toolbartitle)
+            }
         }
     }
 
@@ -79,22 +94,22 @@ abstract class BaseFragment<VM : BaseViewModel,
     private fun onCreateReference() {
         viewModel?.isLoading?.observe(this) {
             if (it == false) {
-                getStateLayout()?.loading()
+                stateLayout?.loading()
             } else {
-                getStateLayout()?.loadingWithContent()
+                stateLayout?.loadingWithContent()
             }
         }
 
         viewModel?.networkError?.observe(this) {
-            it?.let { it1 -> getStateLayout()?.infoButtonListener(it1) }
+            it?.let { it1 -> stateLayout?.infoButtonListener(it1) }
         }
 
         viewModel?.infoStateview?.observe(this) {
-            getStateLayout()?.showInfo(it)
+            stateLayout?.showInfo(it)
         }
 
         viewModel?.infoEmptyView?.observe(this) {
-            getStateLayout()?.showEmpty(it)
+            stateLayout?.showEmpty(it)
         }
 
         viewModel?.errorMessage?.observe(this) {
@@ -147,15 +162,14 @@ abstract class BaseFragment<VM : BaseViewModel,
 
         view?.isFocusableInTouchMode = true
         view?.requestFocus()
-        view?.setOnKeyListener(object : View.OnKeyListener {
-            override fun onKey(v: View, keyCode: Int, event: KeyEvent): Boolean {
+        view?.setOnKeyListener { _, keyCode, event ->
+            if (event.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
+                onBack()
+                true
+            } else false
+        }
 
-                return if (event.action == KeyEvent.ACTION_UP && keyCode == KeyEvent.KEYCODE_BACK) {
-                    onBack()
-                    true
-                } else false
-            }
-        })
+
     }
 
     open fun onBack() {
