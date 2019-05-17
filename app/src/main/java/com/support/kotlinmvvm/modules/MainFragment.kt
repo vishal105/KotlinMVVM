@@ -9,6 +9,7 @@ import com.support.kotlinmvvm.databinding.FragmentMainBinding
 import com.support.kotlinmvvm.modules.bottomnavigation.BottomNavigationActivity
 import com.support.kotlinmvvm.utils.statelayout.StateLayout
 import com.support.kotlinmvvm.utils.widgets.spinner.SpinnerBottomDialogFragment
+import com.support.kotlinmvvm.utils.widgets.spinner.bottomSheetList
 import kotlinx.android.synthetic.main.fragment_main.*
 
 
@@ -50,11 +51,9 @@ class MainFragment : BaseFragment<MainFragmentViewModel,
             list.add(SpinnerItem("Name 4"))
             list.add(SpinnerItem("Name 5"))
 
-            val dialog =
-                SpinnerBottomDialogFragment("Select Data",list){ item,position ->
-                 tvSpinner?.text = item.name
-            }
-            dialog.show(childFragmentManager,"Sele")
+            childFragmentManager.bottomSheetList("Select Data",list,{ item,position ->
+                tvSpinner?.text = item.name
+            },true,true,true)
         }
     }
 

@@ -10,35 +10,58 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.KeyEvent
 import android.view.View
+import android.view.ViewAnimationUtils
 import android.view.inputmethod.InputMethodManager
 import android.widget.LinearLayout
+import androidx.fragment.app.FragmentManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
 import com.support.kotlinmvvm.R
 import com.support.kotlinmvvm.databinding.RowSpinnerItemBinding
 import com.support.kotlinmvvm.utils.adapter.ChoiceMode
 import com.support.kotlinmvvm.utils.adapter.setUpAdapter
-import kotlinx.android.synthetic.main.dialog_spinner.*
 import kotlinx.android.synthetic.main.dialog_spinner.view.*
+import android.R.attr.start
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 
+
+
+fun <T> FragmentManager.bottomSheetList(
+    title: String,
+    items: MutableList<T>,
+    onClick: ((T, Int) -> Unit),
+    isSearchEnable: Boolean = false,
+    isFullScreen: Boolean = false,
+    isCancelable: Boolean = false
+) {
+    val dialog =
+        SpinnerBottomDialogFragment(
+            "Select Data", items, onClick,
+            isSearchEnable, isFullScreen, isCancelable
+        )
+    dialog.show(this, title)
+}
 
 class SpinnerBottomDialogFragment<T>(
     val title: String,
     val items: MutableList<T>,
-    val onClick: ((T, Int) -> Unit)
+    val onClick: ((T, Int) -> Unit),
+    val isSearchEnable: Boolean = false,
+    val isFullScreen: Boolean = false,
+    val cancelable: Boolean = false
 ) : BottomSheetDialogFragment() {
 
     private var mBehavior: BottomSheetBehavior<*>? = null
     private var isSearchOpen = false
-    private var mainView : View? = null
+    private var mainView: View? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val dialog = super.onCreateDialog(savedInstanceState) as BottomSheetDialog
 
-        isCancelable = false
+        isCancelable = cancelable
 
         mainView = View.inflate(context, R.layout.dialog_spinner, null)
 
@@ -67,6 +90,12 @@ class SpinnerBottomDialogFragment<T>(
             });*/
         }
 
+        if (isSearchEnable) {
+            mainView?.btnSearch?.visibility = View.VISIBLE
+        } else {
+            mainView?.btnSearch?.visibility = View.GONE
+        }
+
         mainView?.edtSearch?.setOnFocusChangeListener { viewd, b ->
             if (b) {
                 if (isSearchOpen) {
@@ -79,13 +108,7 @@ class SpinnerBottomDialogFragment<T>(
 
         mainView?.btnSearch?.setOnClickListener {
             if (!isSearchOpen) {
-                isSearchOpen = true
-                mainView?.lytSpinnerNormalHeader?.visibility = View.GONE
-                mainView?.lytSpinnerSearchHeader?.visibility = View.VISIBLE
-                Handler().postDelayed({
-                    mainView?.edtSearch?.requestFocus()
-                    mainView?.edtSearch?.showKeyboard()
-                }, 100)
+                openSearch()
             }
         }
 
@@ -94,7 +117,7 @@ class SpinnerBottomDialogFragment<T>(
         }
 
         mainView?.btnBack?.setOnClickListener {
-            back()
+            closeSearch()
         }
 
         mainView?.btnCancel?.setOnClickListener {
@@ -128,7 +151,11 @@ class SpinnerBottomDialogFragment<T>(
 
         mBehavior = BottomSheetBehavior.from<View>(mainView?.parent as View)
 
-        mBehavior?.setBottomSheetCallback(object : BottomSheetCallback() {
+        if (isFullScreen) {
+            mBehavior?.state = BottomSheetBehavior.STATE_EXPANDED
+        }
+
+        mBehavior?.setBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
                 if (newState == BottomSheetBehavior.STATE_EXPANDED) {
                     mainView?.lytHeader?.elevation = 12f
@@ -146,7 +173,7 @@ class SpinnerBottomDialogFragment<T>(
             override fun onKey(p0: DialogInterface?, keyCode: Int, p2: KeyEvent?): Boolean {
                 return if (keyCode == KeyEvent.KEYCODE_BACK) {
                     if (isSearchOpen) {
-                        back()
+                        closeSearch()
                     }
                     true
                 } else
@@ -156,7 +183,7 @@ class SpinnerBottomDialogFragment<T>(
             override fun onKey(p0: View?, keyCode: Int, event: KeyEvent?): Boolean {
                 return if (keyCode == KeyEvent.KEYCODE_BACK) {
                     if (isSearchOpen) {
-                        back()
+                        closeSearch()
                     }
                     true
                 } else
@@ -179,14 +206,14 @@ class SpinnerBottomDialogFragment<T>(
             onClick.invoke(item, position)
         }
     )
-
-    fun back(){
+/*
+    fun back() {
         isSearchOpen = false
         mainView?.lytSpinnerNormalHeader?.visibility = View.VISIBLE
         mainView?.lytSpinnerSearchHeader?.visibility = View.GONE
         mainView?.edtSearch?.setText("")
         closeKeyboard()
-    }
+    }*/
 
     fun getScreenHeight(): Int {
         return Resources.getSystem().displayMetrics.heightPixels
@@ -205,5 +232,70 @@ class SpinnerBottomDialogFragment<T>(
         inputMethodManager.showSoftInput(this, InputMethodManager.SHOW_IMPLICIT)
     }
 
+    private fun closeSearch() {
+        isSearchOpen = false
+        mainView?.btnSearch?.let {
+            circleReveal(R.id.lytSpinnerSearchHeader,1,true,false);
+        }
+        mainView?.edtSearch?.setText("")
+        closeKeyboard()
+    }
 
+    private fun openSearch() {
+        isSearchOpen = true
+        mainView?.edtSearch?.setText("")
+        /*mainView?.lytSpinnerNormalHeader?.visibility = View.GONE
+        mainView?.lytSpinnerSearchHeader?.visibility = View.VISIBLE*/
+        Handler().postDelayed({
+            mainView?.edtSearch?.requestFocus()
+            mainView?.edtSearch?.showKeyboard()
+        }, 100)
+
+        mainView?.btnSearch?.let {
+            circleReveal(R.id.lytSpinnerSearchHeader,1,true,true);
+        }
+    }
+
+    fun circleReveal(viewID: Int, posFromRight: Int, containsOverflow: Boolean, isShow: Boolean) {
+        val myView = mainView?.findViewById<View>(viewID)
+        var width = myView?.width
+        if (width != null) {
+            if (posFromRight > 0)
+                width -= posFromRight * resources.getDimensionPixelSize(R.dimen.abc_action_button_min_width_material) - resources.getDimensionPixelSize(
+                    R.dimen.abc_action_button_min_width_material
+                ) / 2
+        }
+        if (width != null) {
+            if (containsOverflow)
+                width -= resources.getDimensionPixelSize(R.dimen.abc_action_button_min_width_overflow_material)
+        }
+
+        val cx = width ?: 0
+        val cy = myView?.height?.div(2)  ?: 0
+
+        var anim: Animator ? = null
+
+        width?.toFloat()?.let {
+            anim = if (isShow)
+                ViewAnimationUtils.createCircularReveal(myView, cx, cy, 0f, it)
+            else
+                ViewAnimationUtils.createCircularReveal(myView, cx, cy, it, 0f)
+        }
+
+        anim?.duration = 220.toLong()
+
+        anim?.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                if (!isShow) {
+                    super.onAnimationEnd(animation)
+                    myView?.visibility = View.INVISIBLE
+                }
+            }
+        })
+
+        if (isShow) {
+            myView?.visibility = View.VISIBLE
+        }
+        anim?.start()
+    }
 }
